@@ -1,5 +1,7 @@
 "use client";
 
+import apiRequest from "@/apiRequest/auth";
+import { registerBody, RegisterSchema } from "@/app/schemaValidations/auth.schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -9,14 +11,46 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
+import { handleErrorApi } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(registerBody) });
+
+  const onSubmit = async (data: RegisterSchema) => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const result = await apiRequest.register(data);
+      toast.success(result.data.message);
+      router.push("/login");
+    } catch (error) {
+      handleErrorApi<RegisterSchema>({
+        error,
+        setError,
+      })
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="flex justify-center pt-20">
@@ -34,7 +68,7 @@ export default function RegisterPage() {
         </CardHeader>
 
         <CardContent>
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-2">
               <Label htmlFor="">
                 Tên người dùng<span className="text-red-500">*</span>
@@ -46,8 +80,14 @@ export default function RegisterPage() {
                 <InputGroupInput
                   type="text"
                   placeholder="Nhập tên người dùng"
+                  {...register("username")}
                 />
               </InputGroup>
+              {errors.username && (
+                <p className="text-red-500 text-sm">
+                  {errors.username.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="">
@@ -60,6 +100,7 @@ export default function RegisterPage() {
                 <InputGroupInput
                   type={showPassword ? "text" : "password"}
                   placeholder="•••••••••"
+                  {...register("password")}
                 />
                 <InputGroupAddon align={"inline-end"}>
                   <InputGroupButton
@@ -75,6 +116,11 @@ export default function RegisterPage() {
                   </InputGroupButton>
                 </InputGroupAddon>
               </InputGroup>
+              {errors.password && (
+                <p className="text-red-500 text-sm">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="">
@@ -87,6 +133,7 @@ export default function RegisterPage() {
                 <InputGroupInput
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="•••••••••"
+                  {...register("confirmPassword")}
                 />
                 <InputGroupAddon align={"inline-end"}>
                   <InputGroupButton
@@ -102,8 +149,15 @@ export default function RegisterPage() {
                   </InputGroupButton>
                 </InputGroupAddon>
               </InputGroup>
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-sm">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
             </div>
-            <Button className="w-full h-11 rounded-xl bg-blue-500 font-medium hover:bg-blue-600 cursor-pointer">
+            <Button
+              className="w-full h-11 rounded-xl bg-blue-500 font-medium hover:bg-blue-600 cursor-pointer"
+            >
               Đăng ký
             </Button>
             <div className="flex justify-between items-center gap-2">
