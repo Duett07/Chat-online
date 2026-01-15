@@ -26,6 +26,13 @@ export const handleErrorApi = <T extends Record<string, any>>({
       });
     });
     return;
+  } else if ((error as any)?.response?.status === 401) {
+    toast.error("Error", {
+      description:
+        (error as any)?.response.data.message || "Vui lòng đăng nhập",
+      duration: 5000,
+    });
+    return;
   } else {
     toast.error("Error", {
       description:

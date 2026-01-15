@@ -1,5 +1,8 @@
 "use client";
 
+import apiRequest from "@/apiRequest/auth";
+import { useAppContext } from "@/app/app-provider";
+import { loginBody, LoginSchema } from "@/app/schemaValidations/auth.schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -9,13 +12,47 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
+import { handleErrorApi } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { setUser } = useAppContext();
+  const router = useRouter();
+
+  const {
+    register: login,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(loginBody) });
+
+  const onSubmit = async (data: LoginSchema) => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const result = await apiRequest.login(data);
+      await apiRequest.auth({
+        accessToken: result.data.data.accessToken,
+        expiresAt: result.data.data.expiresAt,
+      });
+      toast.success(result.data.message);
+      setUser(result.data.data.account);
+      router.push("/");
+    } catch (error) {
+      handleErrorApi<LoginSchema>({ error, setError });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex justify-center pt-20">
@@ -31,7 +68,7 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent>
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-2">
               <Label htmlFor="">
                 Tên người dùng<span className="text-red-500">*</span>
@@ -43,8 +80,14 @@ export default function LoginPage() {
                 <InputGroupInput
                   type="text"
                   placeholder="Nhập tên người dùng"
+                  {...login("username")}
                 />
               </InputGroup>
+              {errors.username && (
+                <p className="text-red-500 text-sm">
+                  {errors.username.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="">
@@ -57,6 +100,7 @@ export default function LoginPage() {
                 <InputGroupInput
                   type={showPassword ? "text" : "password"}
                   placeholder="•••••••••"
+                  {...login("password")}
                 />
                 <InputGroupAddon align={"inline-end"}>
                   <InputGroupButton
@@ -72,6 +116,11 @@ export default function LoginPage() {
                   </InputGroupButton>
                 </InputGroupAddon>
               </InputGroup>
+              {errors.password && (
+                <p className="text-red-500 text-sm">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
             <Button className="w-full h-11 rounded-xl bg-blue-500 font-medium hover:bg-blue-600 cursor-pointer">
               Đăng nhập
