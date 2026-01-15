@@ -35,3 +35,37 @@ export const registerBody = z
   });
 
 export type RegisterSchema = z.infer<typeof registerBody>;
+
+export const RegisterRes = z.object({
+  data: z.object({
+    id: z.string(),
+    username: z.string(),
+    createdAt: z.string(),
+  }),
+  message: z.string(),
+});
+
+export type RegisterRes = z.infer<typeof RegisterRes>;
+
+export const loginBody = z
+  .object({
+    username: z.string().min(1, { message: "Vui lòng nhập tên người dùng" }),
+    password: z.string().min(1, { message: "Vui lòng nhập mật khẩu" }),
+  })
+  .strict();
+
+export type LoginSchema = z.infer<typeof loginBody>;
+
+export const LoginRes = z.object({
+  data: z.object({
+    account: z.object({
+      id: z.string(),
+      username: z.string(),
+    }),
+    accessToken: z.string(),
+    expiresAt: z.string(),
+  }),
+  message: z.string(),
+});
+
+export type LoginRes = z.infer<typeof LoginRes>;
