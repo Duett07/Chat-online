@@ -1,3 +1,6 @@
+"use client";
+
+import apiRequest from "@/apiRequest/auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +20,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { handleErrorApi } from "@/lib/utils";
 import {
   CircleUserRound,
   Dot,
@@ -31,7 +35,7 @@ import {
   UserRoundPlus,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const conversations = [
@@ -156,6 +160,18 @@ export default function Home() {
       isOnline: true,
     },
   ];
+
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await apiRequest.logout();
+      router.push("/login");
+    } catch (error) {
+      handleErrorApi({ error, setError: () => {} } as any);
+    }
+  };
+
   return (
     <div className="flex flex-row h-screen overflow-hidden">
       <div className="flex flex-col items-center justify-between bg-white shadow-[0px_0px_4px_2px_rgba(0,0,0,0.10)] px-4 py-6">
@@ -216,7 +232,9 @@ export default function Home() {
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem>
-                  <p className="text-red-600">Đăng xuất</p>
+                  <p className="text-red-600 cursor-pointer" onClick={handleLogout}>
+                    Đăng xuất
+                  </p>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>

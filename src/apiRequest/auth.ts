@@ -14,6 +14,14 @@ const apiRequest = {
     http.post("api/auth", body, {
       baseURL: "",
     }),
+  logout: () =>
+    http.post(
+      "/api/auth/logout",
+      {},
+      {
+        baseURL: "",
+      }
+    ),
 };
 
 export default apiRequest;
