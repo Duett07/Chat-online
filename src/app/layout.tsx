@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { Metadata } from "next";
+import AuthGate from "@/components/auth-gate";
 import AppProvider from "./app-provider";
-import { ThemeProvider } from "next-themes";
 
 const inter = Inter({
   variable: "--font-geist-sans",
@@ -24,8 +24,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Toaster position="bottom-right" richColors />
-        <AppProvider>{children}</AppProvider>
+        <AppProvider>
+          <AuthGate>{children}</AuthGate>
+        </AppProvider>
       </body>
     </html>
   );
 }
+

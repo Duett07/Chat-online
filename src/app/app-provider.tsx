@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { AccountResType } from "./schemaValidations/account.schema";
 import { isClient } from "@/lib/http";
 
@@ -31,11 +31,29 @@ export default function AppProvider({
     }
     return null;
   });
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      setUserState(JSON.parse(stored));
+    }
+  }, []);
+
   const isAuthenticated = Boolean(user);
   const setUser = (user: User | null) => {
     setUserState(user);
     localStorage.setItem("user", JSON.stringify(user));
   };
+
+  if (!mounted) {
+    return null;
+  }
+
+
   return (
     <AppContext.Provider value={{ user, setUser, isAuthenticated }}>
       {children}
