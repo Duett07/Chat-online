@@ -22,8 +22,6 @@ import {
 } from "@/components/ui/tooltip";
 import { handleErrorApi } from "@/lib/utils";
 import {
-  CircleUserRound,
-  Dot,
   HomeIcon,
   MessageCircleMore,
   PhoneCall,
@@ -36,6 +34,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useRef } from "react";
+import { toast } from "sonner";
 
 export default function Home() {
   const conversations = [
@@ -166,6 +166,8 @@ export default function Home() {
   const handleLogout = async () => {
     try {
       await apiRequest.logout();
+      toast.success("Đăng xuất thành công");
+      localStorage.removeItem("user");
       router.push("/login");
     } catch (error) {
       handleErrorApi({ error, setError: () => {} } as any);
@@ -232,7 +234,10 @@ export default function Home() {
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem>
-                  <p className="text-red-600 cursor-pointer" onClick={handleLogout}>
+                  <p
+                    className="text-red-600 cursor-pointer"
+                    onClick={handleLogout}
+                  >
                     Đăng xuất
                   </p>
                 </DropdownMenuItem>

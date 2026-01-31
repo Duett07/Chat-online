@@ -1,15 +1,7 @@
-
 import { HttpError } from "@/lib/http";
 
 export async function POST(request: Request) {
   const res = await request.json();
-
-//   if (!accessToken) {
-//     return Response.json(
-//       { message: "Không thể nhận được accessToken" },
-//       { status: 401 }
-//     );
-//   }
 
   try {
     return Response.json(res, {
