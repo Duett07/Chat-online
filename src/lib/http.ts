@@ -41,6 +41,7 @@ const http = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
   timeout: 20000,
   withCredentials: true,
+  headers: { "ngrok-skip-browser-warning": "true" },
 });
 
 // ===== REQUEST INTERCEPTOR =====
@@ -54,14 +55,14 @@ http.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 http.interceptors.response.use(
   (response) => response,
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 export default http;
