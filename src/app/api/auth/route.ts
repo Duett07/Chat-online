@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   if (!accessToken) {
     return Response.json(
       { message: "Không thể nhận được accessToken" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
