@@ -45,6 +45,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import EmojiPicker from "emoji-picker-react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import Profile from "@/components/profile";
 
 export default function Home() {
   const router = useRouter();
@@ -126,6 +132,7 @@ export default function Home() {
 
   const userStored = localStorage.getItem("user");
   const userParsed = userStored ? JSON.parse(userStored) : null;
+  
 
   const [input, setInput] = useState("");
   const ws = useWebSocket();
@@ -243,6 +250,12 @@ export default function Home() {
       .includes(search.toLowerCase()),
   );
 
+  const [open, setOpen] = useState(false);
+
+  const handleOpen = (action: boolean) => {
+    setOpen(action);
+  };
+
   return (
     <div className="flex flex-row h-screen overflow-hidden">
       <div className="flex flex-col items-center justify-between bg-white shadow-[0px_0px_4px_2px_rgba(0,0,0,0.10)] px-4 py-6">
@@ -291,11 +304,14 @@ export default function Home() {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="ml-4 p-4">
               <DropdownMenuGroup className="space-y-2">
-                <DropdownMenuItem className="gap-3">
+                <DropdownMenuItem
+                  className="gap-3 cursor-pointer hover:bg-gray-100 rounded-md"
+                  onClick={() => handleOpen(true)}
+                >
                   <User className="size-5 text-black" />
                   <p>Thông tin tài khoản</p>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="gap-3">
+                <DropdownMenuItem className="gap-3 cursor-pointer hover:bg-gray-100 rounded-md">
                   <Settings className="size-5 text-black" />
                   <p>Cài đặt</p>
                 </DropdownMenuItem>
@@ -304,7 +320,7 @@ export default function Home() {
               <DropdownMenuGroup>
                 <DropdownMenuItem>
                   <p
-                    className="text-red-600 cursor-pointer"
+                    className="text-red-600 cursor-pointer hover:text-red-800 rounded-md"
                     onClick={handleLogout}
                   >
                     Đăng xuất
@@ -507,6 +523,7 @@ export default function Home() {
           <p>Khám phá tiện ích và gửi tin nhắn riêng cho bạn bè.</p>
         </div>
       )}
+      <Profile action={open}  onClose={() => setOpen(false)} image={userParsed.avatar}/>
     </div>
   );
 }
