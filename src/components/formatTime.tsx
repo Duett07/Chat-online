@@ -39,3 +39,10 @@ export const isSameDay = (a: string, b: string) => {
     d1.getDate() === d2.getDate()
   );
 };
+
+export function formatDate(dateStr?: string) {
+  if (!dateStr) return "";
+
+  const [year, month, day] = dateStr.split("-");
+  return `${day}/${month}/${year}`;
+}
