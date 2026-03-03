@@ -37,6 +37,7 @@ import {
   Send,
   Settings,
   Smile,
+  Trash2,
   User,
   UserRoundPlus,
 } from "lucide-react";
@@ -51,6 +52,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import Profile from "@/components/profile";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 export default function Home() {
   const router = useRouter();
@@ -70,6 +76,7 @@ export default function Home() {
     content: string;
     createdAt: string;
     senderId: string;
+    isDeleted?: boolean;
   };
 
   type ConversationItem = {
@@ -109,6 +116,7 @@ export default function Home() {
     content: string;
     displayOrder: number;
     createdAt: string;
+    deleted?: boolean;
   };
 
   const [selectedUser, setSelectedUser] =
@@ -123,6 +131,7 @@ export default function Home() {
     try {
       const result = await apiRequestMessage.getMessages(user.id);
       setMessages(result.data.data);
+      console.log("data: ", result.data.data);
     } catch (error) {
       handleErrorApi({ error, setError: () => {} } as any);
     } finally {
@@ -132,7 +141,6 @@ export default function Home() {
 
   const userStored = localStorage.getItem("user");
   const userParsed = userStored ? JSON.parse(userStored) : null;
-  
 
   const [input, setInput] = useState("");
   const ws = useWebSocket();
@@ -254,6 +262,20 @@ export default function Home() {
 
   const handleOpen = (action: boolean) => {
     setOpen(action);
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, deleted: true } : m)),
+    );
+    try {
+      await apiRequestMessage.deleteMessage(messageId);
+    } catch (error) {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, deleted: false } : m)),
+      );
+      handleErrorApi({ error, setError: () => {} } as any);
+    }
   };
 
   return (
@@ -382,14 +404,20 @@ export default function Home() {
                   </span>
                 </div>
                 <div>
-                  <p className="font-normal text-gray-500 text-sm truncate">
-                    {conversation.lastMessage
-                      ? String(conversation.lastMessage.senderId) ===
-                        String(userParsed.id)
-                        ? `Bạn: ${conversation.lastMessage.content}`
-                        : conversation.lastMessage.content
-                      : ""}
-                  </p>
+                  {conversation.lastMessage?.isDeleted ? (
+                    <p className="font-normal text-gray-500 text-sm truncate">
+                      Tin nhắn đã bị xóa
+                    </p>
+                  ) : (
+                    <p className="font-normal text-gray-500 text-sm truncate">
+                      {conversation.lastMessage
+                        ? String(conversation.lastMessage.senderId) ===
+                          String(userParsed.id)
+                          ? `Bạn: ${conversation.lastMessage.content}`
+                          : conversation.lastMessage.content
+                        : ""}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -458,28 +486,58 @@ export default function Home() {
                         height={60}
                       />
                     )}
-                    <div>
-                      <div
-                        className={
-                          isMe
-                            ? "bg-[#85c1f7] p-2 rounded-sm shadow-[0px_1px_0px_0px_rgba(0,0,0,0.20)] max-w-2xl"
-                            : "bg-white p-2 rounded-sm shadow-[0px_1px_0px_0px_rgba(0,0,0,0.20)] max-w-2xl"
-                        }
+                    <HoverCard
+                      openDelay={10}
+                      closeDelay={90}
+                      open={message.deleted ? false : undefined}
+                    >
+                      <HoverCardTrigger asChild>
+                        {message.deleted ? (
+                          <p
+                            className={
+                              isMe
+                                ? "text-gray-500 italic bg-[#85c1f7] p-2 rounded-sm shadow-[0px_1px_0px_0px_rgba(0,0,0,0.20)] max-w-2xl text-white"
+                                : "text-gray-500 italic bg-white p-2 rounded-sm shadow-[0px_1px_0px_0px_rgba(0,0,0,0.20)] max-w-2xl"
+                            }
+                          >
+                            Tin nhắn đã bị xóa
+                          </p>
+                        ) : (
+                          <div>
+                            <div
+                              className={
+                                isMe
+                                  ? "bg-[#85c1f7] p-2 rounded-sm shadow-[0px_1px_0px_0px_rgba(0,0,0,0.20)] max-w-2xl"
+                                  : "bg-white p-2 rounded-sm shadow-[0px_1px_0px_0px_rgba(0,0,0,0.20)] max-w-2xl"
+                              }
+                            >
+                              <p className={isMe ? "text-white" : ""}>
+                                {message.content}
+                              </p>
+                              <span
+                                className={
+                                  isMe
+                                    ? "text-xs font-light text-white"
+                                    : "text-xs font-light"
+                                }
+                              >
+                                {formatTime(message.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </HoverCardTrigger>
+                      <HoverCardContent
+                        className="w-auto p-2 cursor-pointer"
+                        side={isMe ? "left" : "right"}
+                        align="end"
                       >
-                        <p className={isMe ? "text-white" : ""}>
-                          {message.content}
-                        </p>
-                        <span
-                          className={
-                            isMe
-                              ? "text-xs font-light text-white"
-                              : "text-xs font-light"
-                          }
-                        >
-                          {formatTime(message.createdAt)}
-                        </span>
-                      </div>
-                    </div>
+                        <Trash2
+                          className="size-4"
+                          onClick={() => handleDeleteMessage(message.id)}
+                        />
+                      </HoverCardContent>
+                    </HoverCard>
                   </div>
                 </div>
               );
@@ -523,7 +581,11 @@ export default function Home() {
           <p>Khám phá tiện ích và gửi tin nhắn riêng cho bạn bè.</p>
         </div>
       )}
-      <Profile action={open}  onClose={() => setOpen(false)} image={userParsed.avatar}/>
+      <Profile
+        action={open}
+        onClose={() => setOpen(false)}
+        image={userParsed.avatar}
+      />
     </div>
   );
 }
