@@ -3,18 +3,19 @@ import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogHeader,
+  AlertDialogTitle,
 } from "./ui/alert-dialog";
 import Image from "next/image";
 import { AspectRatio } from "./ui/aspect-ratio";
 import { Button } from "./ui/button";
 import { ChevronLeft, PenLine } from "lucide-react";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import userApiResquest from "@/apiRequest/user";
 import { handleErrorApi } from "@/lib/utils";
-import { formatDate, formatTime } from "./formatTime";
+import { formatDate} from "./formatTime";
 import { useRouter } from "next/navigation";
 
 type User = {
@@ -62,11 +63,11 @@ export default function Profile({
                   onClick={() => setMode("view")}
                 />
               )}
-              <h1 className="font-bold">
+              <AlertDialogTitle className="font-bold">
                 {mode === "view"
                   ? "Thông tin tài khoản"
                   : "Cập nhật thông tin cá nhân"}
-              </h1>
+              </AlertDialogTitle>
             </div>
             <p onClick={onClose} className="cursor-pointer">
               X

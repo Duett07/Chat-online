@@ -55,7 +55,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex justify-center pt-20">
+    <div className="flex h-dvh items-center justify-center">
       <Card className="bg-white p-8 shadow-[0px_0px_4px_2px_rgba(0,0,0,0.10)] rounded-lg space-y-6 w-lg">
         <CardHeader className="flex flex-col items-center">
           <div className="bg-blue-100 p-4 rounded-2xl">

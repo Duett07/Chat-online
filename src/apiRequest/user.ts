@@ -7,6 +7,11 @@ const userApiResquest = {
     gender: string;
     dateOfBirth: string;
   }) => http.put("/api/v1/user/update", body),
+
+  findUser: (displayName: string) =>
+    http.post("/api/v1/user/find-user", { displayName }),
+
+  getUser: (id: string) => http.get(`/api/v1/user/get/${id}`),
 };
 
 export default userApiResquest;
