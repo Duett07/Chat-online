@@ -1,4 +1,6 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
+import { useAppContext } from "@/app/app-provider";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 const WebSocketContext = createContext<WebSocket | null>(null);
@@ -13,31 +15,30 @@ export function WebSocketProvider({
   const wsRef = useRef<WebSocket | null>(null);
   const [sk, setSocket] = useState<WebSocket | null>(null);
 
+  const { user } = useAppContext();
+  const userId = user?.id;
+
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !userId) {
       if (wsRef.current) {
         wsRef.current?.close();
         wsRef.current = null;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSocket(null);
       }
       return;
     }
 
-    const timer = setTimeout(() => {
-      const ws = new WebSocket(`ws://localhost:8080/ws`);
-      wsRef.current = ws;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSocket(ws);
-    }, 50);
+    const ws = new WebSocket(`ws://localhost:8080/ws?userId=${userId}`);
+
+    wsRef.current = ws;
+    setSocket(ws);
 
     return () => {
-      clearTimeout(timer);
       wsRef.current?.close();
       wsRef.current = null;
       setSocket(null);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, userId]);
 
   return (
     <WebSocketContext.Provider value={sk}>{children}</WebSocketContext.Provider>
