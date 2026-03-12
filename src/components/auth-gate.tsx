@@ -1,5 +1,5 @@
 "use client";
-import { useAppContext } from "@/app/app-provider";
+import { useAppContext } from "@/providers/app-provider";
 import { WebSocketProvider } from "@/providers/web-socket-provider";
 import React from "react";
 

@@ -1,6 +1,6 @@
 import Sidebar from "@/components/layout/sidebar";
 import React from "react";
-import { ConversationProvider } from "../conversation-provider";
+import { ConversationProvider } from "../../providers/conversation-provider";
 
 export default function MainLayout({
   children,

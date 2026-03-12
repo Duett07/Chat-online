@@ -29,7 +29,7 @@ import apiRequestMessage from "@/apiRequest/message";
 import { handleErrorApi } from "@/lib/utils";
 import { useWebSocket } from "@/providers/web-socket-provider";
 import { useEffect, useRef, useState } from "react";
-import { useConversations } from "@/app/conversation-provider";
+import { useConversations } from "@/providers/conversation-provider";
 import userApiResquest from "@/apiRequest/user";
 
 type Message = {
@@ -327,7 +327,7 @@ export default function Chat({ params }: { params: { id: string } }) {
                 <HoverCard
                   openDelay={10}
                   closeDelay={90}
-                  open={message.deleted ? false : undefined}
+                  open={message.deleted ? false : !isMe ? false : undefined}
                 >
                   <HoverCardTrigger asChild>
                     {message.deleted ? (
@@ -388,6 +388,13 @@ export default function Chat({ params }: { params: { id: string } }) {
           <InputGroupInput
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder={`Nhập tin nhắn tới ${selectedUser?.partner.displayName || user?.displayName}...`}
           />
           <InputGroupAddon align={"inline-end"}>
             <DropdownMenu>

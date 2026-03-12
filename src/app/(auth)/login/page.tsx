@@ -1,7 +1,6 @@
 "use client";
 
 import apiRequest from "@/apiRequest/auth";
-import { useAppContext } from "@/app/app-provider";
 import { loginBody, LoginSchema } from "@/app/schemaValidations/auth.schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { handleErrorApi } from "@/lib/utils";
+import { useAppContext } from "@/providers/app-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
 import Image from "next/image";
