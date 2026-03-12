@@ -7,6 +7,8 @@ const apiRequestMessage = {
     http.post(`/api/v1/messages/send`, body),
   deleteMessage: (messageId: string) =>
     http.put(`/api/v1/messages/delete/${messageId}`),
+  deleteConversation: (conversationId: string) =>
+    http.put(`/api/v1/conversations/delete/${conversationId}`),
 };
 
 export default apiRequestMessage;

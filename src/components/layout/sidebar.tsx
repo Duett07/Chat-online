@@ -38,8 +38,13 @@ import { toast } from "sonner";
 import Profile from "@/components/profile";
 import AddFriend from "@/components/add-friend";
 import Link from "next/link";
-import { useConversations } from "@/app/conversation-provider";
-import { useAppContext } from "@/app/app-provider";
+import { useConversations } from "@/providers/conversation-provider";
+import { useAppContext } from "@/providers/app-provider";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+} from "../ui/context-menu";
 
 type LastMessage = {
   content: string;
@@ -172,48 +177,23 @@ export default function Sidebar() {
     };
   }, [ws, userParsed?.id, userParsed, setConversations]);
 
+  const handleDeleteConversation = async (conversationId: string) => {
+    try {
+      await apiRequestMessage.deleteConversation(conversationId);
+      setConversations((prev) =>
+        prev.filter((c) => c.conversationId !== conversationId),
+      );
+      router.push("/");
+    } catch (error) {
+      handleErrorApi({ error, setError: () => {} } as any);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col items-center justify-between bg-white shadow-[0px_0px_4px_2px_rgba(0,0,0,0.10)] px-4 py-6">
         <div className="space-y-10 flex flex-col items-center">
-          <Image src={"/Logo.svg"} alt="Logo" width={40} height={40} />
-          <div className="flex flex-col mt-8 space-y-8">
-            <Tooltip>
-              <TooltipTrigger
-                className="bg-gray-200 p-2 rounded-sm cursor-pointer"
-                asChild
-              >
-                <HomeIcon className="size-10" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Trang chủ</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger
-                className="hover:bg-gray-200 p-2 rounded-sm cursor-pointer"
-                asChild
-              >
-                <MessageCircleMore className="size-10" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Tin nhắn</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger
-                className="hover:bg-gray-200 p-2 rounded-sm cursor-pointer"
-                asChild
-              >
-                <Search className="size-10" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Tìm kiếm</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
+          <Image src={"/Logo.svg"} alt="Logo" width={50} height={50} />
         </div>
         <div>
           <DropdownMenu>
@@ -235,10 +215,6 @@ export default function Sidebar() {
                 >
                   <User className="size-5 text-black" />
                   <p>Thông tin tài khoản</p>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-3 cursor-pointer hover:bg-gray-100 rounded-md">
-                  <Settings className="size-5 text-black" />
-                  <p>Cài đặt</p>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
@@ -279,61 +255,68 @@ export default function Sidebar() {
         </div>
         <div className="pt-1 px-4 space-y-2 h-screen overflow-y-auto w-80">
           {filteredConversations.map((conversation) => (
-            <div
-              key={conversation.partner.id}
-              className="flex gap-4 p-2 cursor-pointer hover:bg-gray-100 hover:rounded-md"
-            >
-              <Link
-                href={`/chat/${conversation.partner.id}`}
-                className="flex gap-4 w-full"
-              >
-                {conversation.partner.image !== null &&
-                conversation.partner.image !== "" ? (
-                  <Image
-                    src={conversation.partner.image}
-                    alt=""
-                    width={46}
-                    height={46}
-                  />
-                ) : (
-                  <Image src={"/Profile.svg"} alt="" width={46} height={46} />
-                )}
+            <ContextMenu key={conversation.partner.id}>
+              <ContextMenuTrigger className="flex gap-4 p-2 cursor-pointer hover:bg-gray-100 hover:rounded-md">
+                <Link
+                  href={`/chat/${conversation.partner.id}`}
+                  className="flex gap-4 w-full"
+                >
+                  {conversation.partner.image !== null &&
+                  conversation.partner.image !== "" ? (
+                    <Image
+                      src={conversation.partner.image}
+                      alt=""
+                      width={46}
+                      height={46}
+                    />
+                  ) : (
+                    <Image src={"/Profile.svg"} alt="" width={46} height={46} />
+                  )}
 
-                <div className="w-full min-w-0">
-                  <div className="flex items-center justify-between w-full">
-                    <p className="font-medium text-gray-700">
-                      {conversation.partner.displayName}
-                    </p>
-                    <span className="font-normal text-gray-500 text-sm text-end">
-                      {conversation.lastMessage
-                        ? formatTime(conversation.lastMessage.createdAt)
-                        : ""}
-                    </span>
-                  </div>
-                  <div>
-                    {conversation.lastMessage?.isDeleted ? (
-                      <p className="font-normal text-gray-500 text-sm truncate">
-                        {conversation.lastMessage
-                          ? String(conversation.lastMessage.senderId) ===
-                            String(userParsed?.id)
-                            ? "Bạn: Tin nhắn đã bị xóa"
-                            : "Tin nhắn đã bị xóa"
-                          : ""}
+                  <div className="w-full min-w-0">
+                    <div className="flex items-center justify-between w-full">
+                      <p className="font-medium text-gray-700">
+                        {conversation.partner.displayName}
                       </p>
-                    ) : (
-                      <p className="font-normal text-gray-500 text-sm truncate">
+                      <span className="font-normal text-gray-500 text-sm text-end">
                         {conversation.lastMessage
-                          ? String(conversation.lastMessage.senderId) ===
-                            String(userParsed?.id)
-                            ? `Bạn: ${conversation.lastMessage.content}`
-                            : conversation.lastMessage.content
+                          ? formatTime(conversation.lastMessage.createdAt)
                           : ""}
-                      </p>
-                    )}
+                      </span>
+                    </div>
+                    <div>
+                      {conversation.lastMessage?.isDeleted ? (
+                        <p className="font-normal text-gray-500 text-sm truncate">
+                          {conversation.lastMessage
+                            ? String(conversation.lastMessage.senderId) ===
+                              String(userParsed?.id)
+                              ? "Bạn: Tin nhắn đã bị xóa"
+                              : "Tin nhắn đã bị xóa"
+                            : ""}
+                        </p>
+                      ) : (
+                        <p className="font-normal text-gray-500 text-sm truncate">
+                          {conversation.lastMessage
+                            ? String(conversation.lastMessage.senderId) ===
+                              String(userParsed?.id)
+                              ? `Bạn: ${conversation.lastMessage.content}`
+                              : conversation.lastMessage.content
+                            : ""}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Link>
-            </div>
+                </Link>
+              </ContextMenuTrigger>
+              <ContextMenuContent
+                className="p-2 text-sm text-red-600 cursor-pointer"
+                onClick={() =>
+                  handleDeleteConversation(conversation.conversationId)
+                }
+              >
+                Xóa hội thoại
+              </ContextMenuContent>
+            </ContextMenu>
           ))}
         </div>
       </div>

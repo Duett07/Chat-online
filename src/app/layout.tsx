@@ -3,7 +3,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { Metadata } from "next";
 import AuthGate from "@/components/auth-gate";
-import AppProvider from "./app-provider";
+import AppProvider from "@/providers/app-provider";
 
 const inter = Inter({
   variable: "--font-geist-sans",

@@ -1,7 +1,5 @@
 import { User } from "./add-friend";
-import {
-  AlertDialogFooter,
-} from "./ui/alert-dialog";
+import { AlertDialogFooter } from "./ui/alert-dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import Image from "next/image";
@@ -12,12 +10,14 @@ export default function Search({
   onClose,
   setValue,
   handleSearch,
+  onKeyDown,
 }: {
   onDetail: () => void;
   user: User[] | null;
   onClose: () => void;
   setValue: (value: string) => void;
   handleSearch: () => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
   return (
     <>
@@ -26,6 +26,7 @@ export default function Search({
           placeholder="Tên người dùng"
           type="text"
           onChange={(e) => setValue(e.target.value)}
+          onKeyDown={onKeyDown}
         />
         {user && user.length > 0 ? (
           <div

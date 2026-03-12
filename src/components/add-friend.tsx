@@ -69,6 +69,12 @@ export default function AddFriend({
             onClose={onClose}
             setValue={setValue}
             handleSearch={handleSearch}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSearch();
+              }
+            }}
           />
         ) : (
           <Detail users={user} onClose={onClose} />

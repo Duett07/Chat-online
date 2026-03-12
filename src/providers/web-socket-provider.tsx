@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
-import { useAppContext } from "@/app/app-provider";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useAppContext } from "./app-provider";
 
 const WebSocketContext = createContext<WebSocket | null>(null);
 
