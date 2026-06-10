@@ -119,15 +119,31 @@ export default function Sidebar() {
   };
 
   useEffect(() => {
-    if (!ws || !userParsed) return;
+    if (!ws) return;
 
     const handler = (event: MessageEvent) => {
       const data = JSON.parse(event.data);
+      if (data.type === "USER_STATUS") {
+        const { userId, online } = data.data;
+        setConversations((prev) =>
+          prev.map((c) =>
+            String(c.partner.id) === String(userId)
+              ? { ...c, partner: { ...c.partner, online } }
+              : c
+          )
+        );
+        return;
+      }
+
       if (data.type !== "MESSAGE") return;
+
+      const userStored = localStorage.getItem("user");
+      const localUser = userStored ? JSON.parse(userStored) : null;
+      if (!localUser) return;
 
       const msg = data.data;
 
-      const isSender = String(msg.senderId) === String(userParsed.id);
+      const isSender = String(msg.senderId) === String(localUser.id);
       const partnerId = isSender ? msg.receiverId : msg.senderId;
 
       const newLastMessage = {
@@ -175,7 +191,7 @@ export default function Sidebar() {
     return () => {
       ws.removeEventListener("message", handler);
     };
-  }, [ws, userParsed?.id, userParsed, setConversations]);
+  }, [ws, setConversations]);
 
   const handleDeleteConversation = async (conversationId: string) => {
     try {

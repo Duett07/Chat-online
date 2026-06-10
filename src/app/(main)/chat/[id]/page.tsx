@@ -12,12 +12,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { PhoneCall, Send, Smile, Trash2 } from "lucide-react";
+import { Send, Smile, Trash2 } from "lucide-react";
 import Image from "next/image";
 import EmojiPicker from "emoji-picker-react";
 import {
@@ -28,7 +23,7 @@ import {
 import apiRequestMessage from "@/apiRequest/message";
 import { handleErrorApi } from "@/lib/utils";
 import { useWebSocket } from "@/providers/web-socket-provider";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useConversations } from "@/providers/conversation-provider";
 import userApiResquest from "@/apiRequest/user";
 
@@ -67,6 +62,8 @@ type User = {
 };
 
 export default function Chat({ params }: { params: { id: string } }) {
+  const unwrappedParams = use(params as any) as any;
+  const id = unwrappedParams.id;
   const [loading, setLoading] = useState(false);
 
   const [selectedUser, setSelectedUser] = useState<ConversationItem | null>(
@@ -84,18 +81,34 @@ export default function Chat({ params }: { params: { id: string } }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    if (!ws || !userParsed) return;
+    if (!ws) return;
 
     const handler = async (event: MessageEvent) => {
       const payload = JSON.parse(event.data);
+      
+      if (payload.type === "USER_STATUS") {
+        const { userId, online } = payload.data;
+        setConversations((prev) =>
+          prev.map((c) =>
+            String(c.partner.id) === String(userId)
+              ? { ...c, partner: { ...c.partner, online } }
+              : c
+          )
+        );
+        return;
+      }
+
       if (payload.type !== "MESSAGE") return;
+
+      const userStored = localStorage.getItem("user");
+      const localUser = userStored ? JSON.parse(userStored) : null;
+      if (!localUser) return;
 
       const msg = payload.data;
       const senderId = msg.senderId;
       const receiverId = msg.receiverId;
-      const { id } = await params;
 
-      if (String(msg.senderId) === String(userParsed.id)) {
+      if (String(msg.senderId) === String(localUser.id)) {
         return;
       }
 
@@ -104,7 +117,7 @@ export default function Chat({ params }: { params: { id: string } }) {
       }
 
       const partnerId =
-        String(senderId) === String(userParsed.id)
+        String(senderId) === String(localUser.id)
           ? receiverId || id
           : senderId;
 
@@ -133,12 +146,10 @@ export default function Chat({ params }: { params: { id: string } }) {
     return () => {
       ws.removeEventListener("message", handler);
     };
-  }, [ws, userParsed?.id]);
+  }, [ws, id, setConversations]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
-
-    const { id } = await params;
 
     const tempMessage = {
       id: "temp-" + Date.now(),
@@ -169,7 +180,7 @@ export default function Chat({ params }: { params: { id: string } }) {
         ),
       );
       setConversations((prev) => {
-        const partnerId = selectedUser?.partner.id;
+        const partnerId = selectedUser?.partner.id || id;
 
         if (!partnerId) return prev;
 
@@ -202,9 +213,9 @@ export default function Chat({ params }: { params: { id: string } }) {
             conversationId: result.data.data.conversationId,
             partner: {
               id: partnerId,
-              displayName: selectedUser?.partner.displayName || "",
-              online: true,
-              image: "",
+              displayName: selectedUser?.partner.displayName || user?.displayName || "",
+              online: selectedUser?.partner.online ?? user?.online ?? true,
+              image: selectedUser?.partner.image || user?.image || "",
             },
             lastMessage: newLastMessage,
           },
@@ -212,7 +223,7 @@ export default function Chat({ params }: { params: { id: string } }) {
         ];
       });
     } catch (error) {
-      handleErrorApi({ error, setError: () => {} } as any);
+      handleErrorApi({ error, setError: () => { } } as any);
     } finally {
       setLoading(false);
     }
@@ -234,14 +245,12 @@ export default function Chat({ params }: { params: { id: string } }) {
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? { ...m, deleted: false } : m)),
       );
-      handleErrorApi({ error, setError: () => {} } as any);
+      handleErrorApi({ error, setError: () => { } } as any);
     }
   };
 
   useEffect(() => {
     const fetchMessages = async () => {
-      const { id } = await params;
-
       setMessages([]);
       if (loading) return;
       setLoading(true);
@@ -249,38 +258,35 @@ export default function Chat({ params }: { params: { id: string } }) {
         const result = await apiRequestMessage.getMessages(id);
         setMessages(result.data.data);
       } catch (error) {
-        handleErrorApi({ error, setError: () => {} } as any);
+        handleErrorApi({ error, setError: () => { } } as any);
       } finally {
         setLoading(false);
       }
     };
     fetchMessages();
-  }, [params]);
+  }, [id]);
 
   useEffect(() => {
     const setUser = async () => {
-      const { id } = await params;
-
       const conversation = conversations.find((c) => c.partner.id === id);
       if (conversation) {
         setSelectedUser(conversation);
       }
     };
     setUser();
-  }, [conversations, params]);
+  }, [conversations, id]);
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { id } = await params;
       try {
         const result = await userApiResquest.getUser(id);
         setUser(result.data.data);
       } catch (error) {
-        handleErrorApi({ error, setError: () => {} } as any);
+        handleErrorApi({ error, setError: () => { } } as any);
       }
     };
     fetchUser();
-  }, [params]);
+  }, [id]);
 
   return (
     <div className="w-full bg-[#f2f2f2] flex flex-col justify-between">
@@ -293,7 +299,7 @@ export default function Chat({ params }: { params: { id: string } }) {
               {selectedUser?.partner.displayName || user?.displayName}
             </p>
             <div className="flex items-center gap-2">
-              {selectedUser?.partner.online === true ? (
+              {(selectedUser?.partner.online ?? user?.online) === true ? (
                 <>
                   <div className="bg-green-500 w-2 h-2 rounded-full" />
                   <p className="font-normal text-gray-500 text-sm">Online</p>
